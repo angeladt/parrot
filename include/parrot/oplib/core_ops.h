@@ -16,10 +16,13 @@
 
 #include "parrot/parrot.h"
 #include "parrot/oplib.h"
+#include "parrot/pbcversion.h"
 #include "parrot/runcore_api.h"
 
+#define PARROT_DYNOP_CORE_INIT  Parrot_DynOp_core_ ## PARROT_PBC_MAJOR ## _ ## PARROT_PBC_MINOR
+
 PARROT_EXPORT
-op_lib_t *Parrot_DynOp_core_4_7_0(PARROT_INTERP, long init);
+op_lib_t *PARROT_DYNOP_CORE_INIT(PARROT_INTERP, long init);
 
  opcode_t * Parrot_end(opcode_t *, PARROT_INTERP);
  opcode_t * Parrot_noop(opcode_t *, PARROT_INTERP);
