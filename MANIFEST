@@ -127,6 +127,7 @@ config/auto/backtrace/test_c.in                             []
 config/auto/backtrace/test_dlinfo_c.in                      []
 config/auto/byteorder.pm                                    []
 config/auto/byteorder/test_c.in                             []
+config/auto/byteorder/bswap_c.in                            []
 config/auto/coverage.pm                                     []
 config/auto/cpu.pm                                          []
 config/auto/cpu/i386/auto.pm                                []
@@ -882,6 +883,7 @@ include/imcc/embed.h                                        [main]include
 include/imcc/yyscanner.h                                    [main]include
 include/parrot/alarm.h                                      [main]include
 include/parrot/api.h                                        [main]include
+include/parrot/bswap.h                                      [main]include
 include/parrot/caches.h                                     [main]include
 include/parrot/call.h                                       [main]include
 include/parrot/cclass.h                                     [main]include
