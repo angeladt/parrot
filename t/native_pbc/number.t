@@ -11,6 +11,11 @@ use t::native_pbc::Test;
 
 use Parrot::Test tests => 11;
 
+# Testing:
+# $ for f in float double "long double" __float128; do make -s clean; perl Configure.pl --floatval="$f" >/dev/null && m -s parrot && echo $f && prove -v t/native_pbc/number.t; done
+
+# TODO: 4_16PPC_be=>8_4_le, 4_4_le=>8_4_le, *=>8_10_le
+
 # testmatrix for coverage overview (GH #394)
 # float conversion src: left-side (pbc) to dest: upper-side (platform)
 # 1: tested ok, 0: fails (skip), ?: not yet tested (todo)
