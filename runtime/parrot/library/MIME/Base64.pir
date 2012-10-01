@@ -89,11 +89,16 @@ Characters occurring after a '=' padding character are never decoded.
     .local pmc six_to_eight
     six_to_eight = get_global 'six_to_eight'
 
-    .local int len, len_mod_3
+    .local int blen, len, len_mod_3
     len = length plain
-    len_mod_3 = len % 3
-print "len="
-say len
+    blen = bytelength plain
+    len_mod_3 = blen % 3
+print "# len="
+print len
+print ", blen="
+print blen
+print ", len_mod_3="
+say len_mod_3
 
     # Fill up with with null bytes
     if len_mod_3 == 1 goto END_1
@@ -125,7 +130,7 @@ say len
       DRAIN_BUF:
         # With more than 3 elements (0-2) in our buf, "drain it", move all elements to the left
         if ix < 4 goto LOOP_3
-print "drain buf: ix="
+print "# drain buf: ix="
 say ix
             $I0 = ix - 1
             $I1 = buf[ix]
@@ -138,10 +143,10 @@ say ix
         if ix > 2 goto HAVE_3
         if i >= len goto HAVE_3
         $I0 = ord plain, i
-print "ord="
-say $I0
-print "ix="
-say ix
+print "# ord="
+print $I0
+print ", ix="
+print ix
 print "i="
 say i
         buf[ix] = $I0
@@ -154,9 +159,9 @@ say i
         $S0 = substr plain, i, 1
         bl = bytelength $S0
         inc i
-print "mb bl="
-say bl
-print "enc="
+print "# MB bl="
+print bl
+print ", enc="
 $I2 = encoding $S0
 $S1 = encodingname $I2
 say $S1
@@ -178,16 +183,18 @@ say $S1
         eight_2 = buf[2]
         if i < len goto MB_2
             if ix > 2 goto MB_2
-say "reset ix 2" # ix = 2
+say "# reset ix 2" # ix = 2
                 eight_2 = 0
                 if ix > 1 goto MB_2
-say "reset ix 1" # ix = 1
+say "# reset ix 1" # ix = 1
                     eight_1 = 0
       MB_2:
         ix = ix - 3
-say "eight_0-2:"
+print "# eight_0="
 say eight_0
+print "# eight_1="
 say eight_1
+print "# eight_2="
 say eight_2
         shr six_0, eight_0, 2
 
@@ -232,8 +239,10 @@ say eight_2
   END_3:
     # padding with '='
     if len_mod_3 == 0 goto END_2
+say "# pad="  #mod 1 or 2
         base64 = replace base64, -1, 1, ascii:"="
-        if len_mod_3 == 2 goto END_2
+        if len_mod_3 == 1 goto END_2
+say "# pad==" #mod 1
             base64 = replace base64, -2, 1, ascii:"="
   END_2:
     .return( base64 )
@@ -252,7 +261,7 @@ say eight_2
       enc = 'ascii'
   ENC_1:
     enc_num = find_encoding enc
-    plain = trans_encoding plain, $I0
+    plain = trans_encoding plain, enc_num
 
     .local pmc eight_to_six
     eight_to_six = get_global 'eight_to_six'
