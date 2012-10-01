@@ -24,12 +24,12 @@ Test cases taken from base64.t of MIME::Base64.
     load_bytecode 'PGE/Util.pbc'
     load_language 'data_json'
 
-    .local pmc plan, is, ok
-    plan = get_hll_global [ 'Test'; 'More' ], 'plan'
-    is   = get_hll_global [ 'Test'; 'More' ], 'is'
-    ok   = get_hll_global [ 'Test'; 'More' ], 'ok'
+    .local pmc plan, is, ok, lives_ok
+    plan     = get_hll_global [ 'Test'; 'More' ], 'plan'
+    is       = get_hll_global [ 'Test'; 'More' ], 'is'
+    ok       = get_hll_global [ 'Test'; 'More' ], 'ok'
 
-    plan(550)
+    plan(551)
 
     .local pmc json
     json = compreg 'data_json'
@@ -37,7 +37,7 @@ Test cases taken from base64.t of MIME::Base64.
     .local pmc encode_decode_tests, decode_tests
     encode_decode_tests = json.'compile'( <<'END_JSON' )
 [ ["Hello, World!\n","SGVsbG8sIFdvcmxkIQo="],
- ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFh\nYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ=="],
   ["\u0000","AA=="],
   ["\u0001","AQ=="],
@@ -332,7 +332,7 @@ END_JSON
     .local int count
     count = 0
     .local pmc test_iterator, test_case
-    .local string plain, base64, comment, comment_count
+    .local string plain, base64, comment, comment_count, enc, esc_plain
 
     encode_decode_tests = encode_decode_tests()
     test_iterator = iter encode_decode_tests
@@ -343,9 +343,15 @@ END_JSON
         base64      = shift test_case
         comment     = 'encode'
         comment_count = count
+        $I0 = encoding plain
+        enc = encodingname $I0
+        esc_plain = escape plain
         comment = concat comment, comment_count
-        # comment = concat comment, " "
-        # comment = concat comment, plain
+        comment = concat comment, " "
+        comment = concat comment, enc
+        comment = concat comment, ":\""
+        comment = concat comment, esc_plain
+        comment = concat comment, "\""
         test_encode( plain, base64, comment )
         comment     = 'decode'
         comment_count = count
@@ -369,6 +375,24 @@ END_JSON
         inc count
     goto dec_loop
     dec_loop_end:
+
+    gh813_base64_utf8()
+
+.end
+
+.sub gh813_base64_utf8
+    .local pmc lives_ok
+    lives_ok = get_hll_global [ 'Test'; 'More' ], 'lives_ok'
+
+    lives_ok(<<'CODE', 'enc_sub("\x{203e}") # Github issue #813')
+.sub foo
+    .local pmc enc_sub
+    enc_sub = get_global [ "MIME"; "Base64" ], 'encode_base64'
+
+    .local string result_encode
+    result_encode = enc_sub(utf8:"\x{203e}")
+.end
+CODE
 
 .end
 
@@ -397,16 +421,37 @@ END_JSON
     .local pmc dec_sub
     dec_sub = get_global [ "MIME"; "Base64" ], 'decode_base64'
 
-    .local pmc eight_to_six
-    eight_to_six = get_global 'eight_to_six'
-
     .local pmc is
     is   = get_hll_global [ 'Test'; 'More' ], 'is'
 
-    .local string result_decode
-    result_decode = dec_sub( base64 )
-    is( result_decode, plain, comment )
+    .local string decode, result_decode
+    .local string enc, enc1
+    $I0 = encoding plain
+    enc = encodingname $I0
+    if $I0 > 1 goto DEC_ENC
+        ## ascii, latin1
+        decode = dec_sub( base64 )
+        decode = trans_encoding decode, $I0
+        goto DEC_2
+  DEC_ENC:
+    decode = dec_sub( base64, enc )
+  DEC_2:
+    $I1 = encoding decode
+    enc1 = encodingname $I1
+    .local string plain_norm, result_norm
+    result_norm = compose decode
+    plain_norm  = compose plain
+    comment = concat comment, " "
+    comment = concat comment, enc1
+    comment = concat comment, " <-"
+    comment = concat comment, enc
+    #$I0 = $I0 + 48
+    #$S0 = chr $I0
+    #comment = concat comment, " "
+    #comment = concat comment, $S0
+    is( result_norm, plain_norm, comment )
 .end
+
 
 =head1 AUTHOR
 
